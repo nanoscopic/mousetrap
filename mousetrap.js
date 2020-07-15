@@ -2,7 +2,7 @@
 // Copyright (c) 2020 David Helkowski
 // License Apache 2.0 - http://www.apache.org/licenses/LICENSE-2.0
   
-angular.module("mousetrap",[]).provider("Mousetrap", function( $document ) {
+angular.module("angularMousetrap",[]).provider("angularMousetrap", function( $document ) {
     var document = $document;
     
     /** mapping of special keycodes to their corresponding keys
