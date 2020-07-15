@@ -2,10 +2,8 @@
 // Copyright (c) 2020 David Helkowski
 // License Apache 2.0 - http://www.apache.org/licenses/LICENSE-2.0
   
-angular.module("angularMousetrap",[]).provider("angularMousetrap", function( $document ) {
+angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
     "ngInject";
-    
-    var document = $document;
     
     /** mapping of special keycodes to their corresponding keys
      * everything in this dictionary cannot use keypress events
