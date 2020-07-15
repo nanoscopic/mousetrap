@@ -3,6 +3,8 @@
 // License Apache 2.0 - http://www.apache.org/licenses/LICENSE-2.0
   
 angular.module("angularMousetrap",[]).provider("angularMousetrap", function( $document ) {
+    "ngInject";
+    
     var document = $document;
     
     /** mapping of special keycodes to their corresponding keys
