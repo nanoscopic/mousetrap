@@ -221,7 +221,7 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
         return _belongsTo(element.parentNode, ancestor);
     }
     
-    this.MouseTrap = function( targetElement ) {
+    this.Mousetrap = function( targetElement ) {
         var self = this;
         
         targetElement = targetElement || document;
