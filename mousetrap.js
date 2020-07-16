@@ -575,7 +575,7 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
     
     this.$get = function( targetElement ) {
         var self = this;
-        return new self.Mousetrap( targetElement );
+        return self.Mousetrap( targetElement );
     }
     
     /** binds an event to mousetrap
@@ -702,23 +702,4 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
         }
         _REVERSE_MAP = null;
     };
-    
-    /** Init the global mousetrap functions
-     * This method is needed to allow the global mousetrap functions to work
-     * now that mousetrap is a constructor function. */
-    this.Mousetrap.init = function() {
-        var self = this;
-        var documentMousetrap = self.Mousetrap( document );
-        for (var method in documentMousetrap) {
-            if (method.charAt(0) !== '_') {
-                self.Mousetrap[method] = (function(method) {
-                    return function() {
-                        return documentMousetrap[method].apply(documentMousetrap, arguments);
-                    };
-                } (method));
-            }
-        }
-    };
-    
-    this.Mousetrap.init();
 });
