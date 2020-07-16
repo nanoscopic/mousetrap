@@ -221,7 +221,7 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
         return _belongsTo(element.parentNode, ancestor);
     }
     
-    function MouseTrap( targetElement ) {
+    this.MouseTrap = function( targetElement ) {
         var self = this;
         
         targetElement = targetElement || document;
@@ -573,10 +573,9 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
         _addEvent(targetElement, 'keyup', _handleKeyEvent);
     }
     
-    this.Mousetrap = Mousetrap;
-    
     this.$get = function( targetElement ) {
-        return new Mousetrap();
+        var self = this;
+        return new self.Mousetrap();
     }
     
     /** binds an event to mousetrap
@@ -585,7 +584,7 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
      * @param {string|Array} keys
      * @param {Function} callback
      * @param {string=} action - 'keypress', 'keydown', or 'keyup' */
-    Mousetrap.prototype.bind = function(keys, callback, action) {
+    this.Mousetrap.prototype.bind = function(keys, callback, action) {
         var self = this;
         keys = keys instanceof Array ? keys : [keys];
         self._bindMultiple.call(self, keys, callback, action);
@@ -604,7 +603,7 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
      * it was defined in the bind method
      * @param {string|Array} keys
      * @param {string} action */
-    Mousetrap.prototype.unbind = function(keys, action) {
+    this.Mousetrap.prototype.unbind = function(keys, action) {
         var self = this;
         return self.bind.call(self, keys, function() {}, action);
     };
@@ -612,7 +611,7 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
     /** triggers an event that has already been bound
      * @param {string} keys
      * @param {string=} action */
-    Mousetrap.prototype.trigger = function(keys, action) {
+    this.Mousetrap.prototype.trigger = function(keys, action) {
         var self = this;
         if (self._directMap[keys + ':' + action]) {
             self._directMap[keys + ':' + action]({}, keys);
@@ -623,7 +622,7 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
     /** resets the library back to its initial state.  this is useful
      * if you want to clear out the current keyboard shortcuts and bind
      * new ones - for example if you switch to another page */
-    Mousetrap.prototype.reset = function() {
+    this.Mousetrap.prototype.reset = function() {
         var self = this;
         self._callbacks = {};
         self._directMap = {};
@@ -662,19 +661,19 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
         return element.tagName == 'INPUT' || element.tagName == 'SELECT' || element.tagName == 'TEXTAREA' || element.isContentEditable;
     };*/
     
-    Mousetrap.prototype.mouseTrapEnabled = true;
+    this. Mousetrap.prototype.mouseTrapEnabled = true;
 
-    Mousetrap.prototype.pause = function() {
+    this.Mousetrap.prototype.pause = function() {
       var self = this;
       self.mouseTrapEnabled = false;
     }
 
-    Mousetrap.prototype.unpause = function() {
+    this.Mousetrap.prototype.unpause = function() {
       var self = this;
       self.mouseTrapEnabled = true;
     }
     
-    Mousetrap.prototype.stopCallback = function(event, element) {
+    this.Mousetrap.prototype.stopCallback = function(event, element) {
       var self = this;
       
       if (!self.mouseTrapEnabled) {
@@ -691,13 +690,13 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
     
     
     /** exposes _handleKey publicly so it can be overwritten by extensions */
-    Mousetrap.prototype.handleKey = function() {
+    this.Mousetrap.prototype.handleKey = function() {
         var self = this;
         return self._handleKey.apply(self, arguments);
     };
     
     /** allow custom key mappings */
-    Mousetrap.addKeycodes = function(object) {
+    this.Mousetrap.addKeycodes = function(object) {
         for (var key in object) {
             if (object.hasOwnProperty(key)) _MAP[key] = object[key];
         }
@@ -707,7 +706,7 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
     /** Init the global mousetrap functions
      * This method is needed to allow the global mousetrap functions to work
      * now that mousetrap is a constructor function. */
-    Mousetrap.init = function() {
+    this.Mousetrap.init = function() {
         var documentMousetrap = Mousetrap(document);
         for (var method in documentMousetrap) {
             if (method.charAt(0) !== '_') {
@@ -720,5 +719,5 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
         }
     };
     
-    Mousetrap.init();
+    this.Mousetrap.init();
 });
