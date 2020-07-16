@@ -575,7 +575,7 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
     
     this.$get = function( targetElement ) {
         var self = this;
-        return new self.Mousetrap();
+        return new self.Mousetrap( targetElement );
     }
     
     /** binds an event to mousetrap
@@ -661,7 +661,7 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
         return element.tagName == 'INPUT' || element.tagName == 'SELECT' || element.tagName == 'TEXTAREA' || element.isContentEditable;
     };*/
     
-    this. Mousetrap.prototype.mouseTrapEnabled = true;
+    this.Mousetrap.prototype.mouseTrapEnabled = true;
 
     this.Mousetrap.prototype.pause = function() {
       var self = this;
@@ -707,10 +707,11 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
      * This method is needed to allow the global mousetrap functions to work
      * now that mousetrap is a constructor function. */
     this.Mousetrap.init = function() {
-        var documentMousetrap = Mousetrap(document);
+        var self = this;
+        var documentMousetrap = self.Mousetrap( document );
         for (var method in documentMousetrap) {
             if (method.charAt(0) !== '_') {
-                Mousetrap[method] = (function(method) {
+                self.Mousetrap[method] = (function(method) {
                     return function() {
                         return documentMousetrap[method].apply(documentMousetrap, arguments);
                     };
