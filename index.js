@@ -1,1 +1,1 @@
-export { default as Mousetrap } from './mousetrap.js'
+export { default as Mousetrap } from './mousetrap.jsx'
