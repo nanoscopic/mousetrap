@@ -700,4 +700,6 @@ export default function Mousetrap() {
         }
         _REVERSE_MAP = null;
     };
+    
+    return this;
 }
