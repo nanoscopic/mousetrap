@@ -2,12 +2,12 @@
 // Copyright (c) 2020 David Helkowski
 // License Apache 2.0 - http://www.apache.org/licenses/LICENSE-2.0
   
-export default function Mousetrap() {
+export default class Mousetrap {
     /** mapping of special keycodes to their corresponding keys
      * everything in this dictionary cannot use keypress events
      * so it has to be here to map to the correct keycodes for
      * keyup/keydown events */
-    var _MAP = {
+    _MAP = {
         8:'backspace', 9:'tab', 13:'enter', 16:'shift', 17:'ctrl', 18:'alt', 20:'capslock',
         27:'esc', 32:'space', 33:'pageup', 34:'pagedown', 35:'end', 36:'home', 37:'left',
         38:'up', 39:'right', 40:'down', 45:'ins', 46:'del', 91:'meta', 93:'meta', 224:'meta'
@@ -16,7 +16,7 @@ export default function Mousetrap() {
     /** mapping for special characters so they can support
      * this dictionary is only used incase you want to bind a
      * keyup or keydown event to one of these keys */
-    var _KEYCODE_MAP = {
+    _KEYCODE_MAP = {
         106:'*', 107:'+', 109:'-', 110:'.', 111:'/', 186:';', 187:'=', 188:',', 189:'-',
         190:'.', 191:'/', 192:'`', 219:'[', 220:'\\', 221:']', 222:'\''
     };
@@ -24,14 +24,14 @@ export default function Mousetrap() {
     /** this is a mapping of keys that require shift on a US keypad back to the non shift equivelents
      * this is so you can use keyup events with these keys
      * this will only work reliably on US keyboards */
-    var _SHIFT_MAP = {
+    _SHIFT_MAP = {
         '~':'`', '!':'1', '@':'2', '#':'3', '$':'4', '%':'5', '^':'6', '&':'7', '*':'8',
         '(':'9', ')':'0', '_':'-', '+':'=', ':':';', '\"':'\'', '<':',', '>':'.', '?':'/', '|':'\\'
     };
     
     /** this is a list of special strings you can use to map
      * to modifier keys when you specify your keyboard shortcuts */
-    var _SPECIAL_ALIASES = {
+    _SPECIAL_ALIASES = {
         'option': 'alt',
         'command': 'meta',
         'return': 'enter',
@@ -43,26 +43,121 @@ export default function Mousetrap() {
     /** variable to store the flipped version of _MAP from above
      * needed to check if we should use keypress or not when no action
      * is specified */
-    var _REVERSE_MAP;
+    _REVERSE_MAP = {};
     
-    /// loop through the f keys, f1 to f19 and add them to the map programatically
-    for (var i = 1; i < 20; ++i) {
-        _MAP[111 + i] = 'f' + i;
-    }
+    constructor() {
+        /// loop through the f keys, f1 to f19 and add them to the map programatically
+        for (var i = 1; i < 20; ++i) {
+            _MAP[111 + i] = 'f' + i;
+        }
+        
+        // loop through to map numbers on the numeric keypad
+        for (i = 0; i <= 9; ++i) {
+            // This needs to use a string cause otherwise since 0 is falsey mousetrap will never fire for numpad 0
+            // pressed as part of a keydown event.
+            // @see https://github.com/ccampbell/mousetrap/pull/258
+            _MAP[i + 96] = i.toString();
+        }
+        
+        /** binds an event to mousetrap
+         * can be a single key, a combination of keys separated with +, an array of keys, or a sequence of keys separated by spaces
+         * be sure to list the modifier keys first to make sure that the correct key ends up getting bound (the last key in the pattern)
+         * @param {string|Array} keys
+         * @param {Function} callback
+         * @param {string=} action - 'keypress', 'keydown', or 'keyup' */
+        this.Mousetrap.prototype.bind = function(keys, callback, action) {
+            var self = this;
+            keys = keys instanceof Array ? keys : [keys];
+            self._bindMultiple.call(self, keys, callback, action);
+            return self;
+        };
+        
+            /** unbinds an event to mousetrap
+         * the unbinding sets the callback function of the specified key combo
+         * to an empty function and deletes the corresponding key in the
+         * _directMap dict.
+         *
+         * TODO: actually remove this from the _callbacks dictionary instead
+         * of binding an empty function
+         *
+         * the keycombo+action has to be exactly the same as
+         * it was defined in the bind method
+         * @param {string|Array} keys
+         * @param {string} action */
+        Mousetrap.prototype.unbind = function(keys, action) {
+            var self = this;
+            return self.bind.call(self, keys, function() {}, action);
+        };
+        
+        /** triggers an event that has already been bound
+         * @param {string} keys
+         * @param {string=} action */
+        this.Mousetrap.prototype.trigger = function(keys, action) {
+            var self = this;
+            if (self._directMap[keys + ':' + action]) {
+                self._directMap[keys + ':' + action]({}, keys);
+            }
+            return self;
+        };
+        
+        /** resets the library back to its initial state.  this is useful
+         * if you want to clear out the current keyboard shortcuts and bind
+         * new ones - for example if you switch to another page */
+        this.Mousetrap.prototype.reset = function() {
+            var self = this;
+            self._callbacks = {};
+            self._directMap = {};
+            return self;
+        };
+        
+        this.Mousetrap.prototype.mouseTrapEnabled = true;
+
+        this.Mousetrap.prototype.pause = function() {
+          var self = this;
+          self.mouseTrapEnabled = false;
+        }
     
-    // loop through to map numbers on the numeric keypad
-    for (i = 0; i <= 9; ++i) {
-        // This needs to use a string cause otherwise since 0 is falsey mousetrap will never fire for numpad 0
-        // pressed as part of a keydown event.
-        // @see https://github.com/ccampbell/mousetrap/pull/258
-        _MAP[i + 96] = i.toString();
+        this.Mousetrap.prototype.unpause = function() {
+          var self = this;
+          self.mouseTrapEnabled = true;
+        }
+        
+        this.Mousetrap.prototype.stopCallback = function(event, element) {
+          var self = this;
+          
+          if (!self.mouseTrapEnabled) {
+            return true;
+          }
+    
+          // if the element has the class "mousetrap" then no need to stop
+          if ((' ' + element.className + ' ').indexOf(' mousetrap ') > -1) {
+            return false;
+          }
+    
+          return (element.contentEditable && element.contentEditable == 'true');
+        };
+        
+        
+        /** exposes _handleKey publicly so it can be overwritten by extensions */
+        this.Mousetrap.prototype.handleKey = function() {
+            var self = this;
+            return self._handleKey.apply(self, arguments);
+        };
+        
+        /** allow custom key mappings */
+        this.Mousetrap.addKeycodes = function(object) {
+            for (var key in object) {
+                if (object.hasOwnProperty(key)) _MAP[key] = object[key];
+            }
+            _REVERSE_MAP = null;
+        };
     }
     
     /** cross browser add event method
      * @param {Element|HTMLDocument} object
      * @param {string} type
      * @param {Function} callback */
-    function _addEvent(object, type, callback) {
+    _addEvent(object, type, callback) {
         if (object.addEventListener) {
             object.addEventListener(type, callback, false);
             return;
@@ -74,7 +169,7 @@ export default function Mousetrap() {
     /** takes the event and returns the key character
      * @param {Event} e
      * @return {string} */
-    function _characterFromEvent(e) {
+    _characterFromEvent(e) {
         // for keypress events we should return the character as is
         if (e.type == 'keypress') {
             var character = String.fromCharCode(e.which);
@@ -98,14 +193,14 @@ export default function Mousetrap() {
         return String.fromCharCode(e.which).toLowerCase();
     }
     
-    function _modifiersMatch(modifiers1, modifiers2) {
+    _modifiersMatch(modifiers1, modifiers2) {
         return modifiers1.sort().join(',') === modifiers2.sort().join(',');
     }
     
     /** takes a key event and figures out what the modifiers are
      * @param {Event} e
      * @returns {Array} */
-    function _eventModifiers(e) {
+    _eventModifiers(e) {
         var modifiers = [];
         if( e.shiftKey ) modifiers.push('shift');
         if( e.altKey   ) modifiers.push('alt');
@@ -114,7 +209,7 @@ export default function Mousetrap() {
         return modifiers;
     }
     
-    function _preventDefault(e) {
+    _preventDefault(e) {
         if (e.preventDefault) {
             e.preventDefault();
             return;
@@ -122,7 +217,7 @@ export default function Mousetrap() {
         e.returnValue = false;
     }
     
-    function _stopPropagation(e) {
+    _stopPropagation(e) {
         if (e.stopPropagation) {
             e.stopPropagation();
             return;
@@ -138,7 +233,7 @@ export default function Mousetrap() {
     
     /** reverses the map lookup so that we can look for specific keys to see what can and can't use keypress
      * @return {Object} */
-    function _getReverseMap() {
+    _getReverseMap() {
         if (!_REVERSE_MAP) {
             _REVERSE_MAP = {};
             for (var key in _MAP) {
@@ -155,7 +250,7 @@ export default function Mousetrap() {
      * @param {string} key - character for key
      * @param {Array} modifiers
      * @param {string=} action passed in */
-    function _pickBestAction(key, modifiers, action) {
+    _pickBestAction(key, modifiers, action) {
         // if no action was picked in we should try to pick the one that we think would work best for this key
         if (!action) action = _getReverseMap()[key] ? 'keydown' : 'keypress';
         
@@ -168,7 +263,7 @@ export default function Mousetrap() {
     /** Converts from a string key combination to an array
      * @param  {string} combination like "command+shift+l"
      * @return {Array} */
-    function _keysFromString(combination) {
+    _keysFromString(combination) {
         if (combination === '+') return ['+'];
         
         combination = combination.replace(/\+{2}/g, '+plus');
@@ -179,7 +274,7 @@ export default function Mousetrap() {
      * @param  {string} combination key combination ("command+s" or "a" or "*")
      * @param  {string=} action
      * @returns {Object} */
-    function _getKeyInfo(combination, action) {
+    _getKeyInfo(combination, action) {
         var keys, key, i, modifiers = [];
         
         // Take the keys from this pattern and figure out what the actual pattern is all about
@@ -212,14 +307,14 @@ export default function Mousetrap() {
         };
     }
     
-    function _belongsTo(element, ancestor) {
+    _belongsTo(element, ancestor) {
         if (element === null || element === document) return false;
         if (element === ancestor) return true;
        
         return _belongsTo(element.parentNode, ancestor);
     }
     
-    this.Mousetrap = function( targetElement ) {
+    Mousetrap = function( targetElement ) {
         var self = this;
         
         targetElement = targetElement || document;
@@ -571,135 +666,8 @@ export default function Mousetrap() {
         _addEvent(targetElement, 'keyup', _handleKeyEvent);
     }
     
-    this.createInstance = function( targetElement ) {
+    createInstance( targetElement ) {
         var self = this;
         return new self.Mousetrap( targetElement );
     }
-    
-    /** binds an event to mousetrap
-     * can be a single key, a combination of keys separated with +, an array of keys, or a sequence of keys separated by spaces
-     * be sure to list the modifier keys first to make sure that the correct key ends up getting bound (the last key in the pattern)
-     * @param {string|Array} keys
-     * @param {Function} callback
-     * @param {string=} action - 'keypress', 'keydown', or 'keyup' */
-    this.Mousetrap.prototype.bind = function(keys, callback, action) {
-        var self = this;
-        keys = keys instanceof Array ? keys : [keys];
-        self._bindMultiple.call(self, keys, callback, action);
-        return self;
-    };
-    
-    /** unbinds an event to mousetrap
-     * the unbinding sets the callback function of the specified key combo
-     * to an empty function and deletes the corresponding key in the
-     * _directMap dict.
-     *
-     * TODO: actually remove this from the _callbacks dictionary instead
-     * of binding an empty function
-     *
-     * the keycombo+action has to be exactly the same as
-     * it was defined in the bind method
-     * @param {string|Array} keys
-     * @param {string} action */
-    this.Mousetrap.prototype.unbind = function(keys, action) {
-        var self = this;
-        return self.bind.call(self, keys, function() {}, action);
-    };
-    
-    /** triggers an event that has already been bound
-     * @param {string} keys
-     * @param {string=} action */
-    this.Mousetrap.prototype.trigger = function(keys, action) {
-        var self = this;
-        if (self._directMap[keys + ':' + action]) {
-            self._directMap[keys + ':' + action]({}, keys);
-        }
-        return self;
-    };
-    
-    /** resets the library back to its initial state.  this is useful
-     * if you want to clear out the current keyboard shortcuts and bind
-     * new ones - for example if you switch to another page */
-    this.Mousetrap.prototype.reset = function() {
-        var self = this;
-        self._callbacks = {};
-        self._directMap = {};
-        return self;
-    };
-    
-    /** should we stop this event before firing off callbacks
-     * @param {Event} e
-     * @param {Element} element
-     * @return {boolean} */
-    /*Mousetrap.prototype.stopCallback = function(e, element) {
-        var self = this;
-        
-        // if the element has the class "mousetrap" then no need to stop
-        if ((' ' + element.className + ' ').indexOf(' mousetrap ') > -1) {
-            return false;
-        }
-        
-        if (_belongsTo(element, self.target)) return false;
-        
-        // Events originating from a shadow DOM are re-targetted and `e.target` is the shadow host,
-        // not the initial event target in the shadow tree. Note that not all events cross the
-        // shadow boundary.
-        // For shadow trees with `mode: 'open'`, the initial event target is the first element in
-        // the event’s composed path. For shadow trees with `mode: 'closed'`, the initial event
-        // target cannot be obtained.
-        if ('composedPath' in e && typeof e.composedPath === 'function') {
-            // For open shadow trees, update `element` so that the following check works.
-            var initialEventTarget = e.composedPath()[0];
-            if (initialEventTarget !== e.target) {
-                element = initialEventTarget;
-            }
-        }
-        
-        // stop for input, select, and textarea
-        return element.tagName == 'INPUT' || element.tagName == 'SELECT' || element.tagName == 'TEXTAREA' || element.isContentEditable;
-    };*/
-    
-    this.Mousetrap.prototype.mouseTrapEnabled = true;
-
-    this.Mousetrap.prototype.pause = function() {
-      var self = this;
-      self.mouseTrapEnabled = false;
-    }
-
-    this.Mousetrap.prototype.unpause = function() {
-      var self = this;
-      self.mouseTrapEnabled = true;
-    }
-    
-    this.Mousetrap.prototype.stopCallback = function(event, element) {
-      var self = this;
-      
-      if (!self.mouseTrapEnabled) {
-        return true;
-      }
-
-      // if the element has the class "mousetrap" then no need to stop
-      if ((' ' + element.className + ' ').indexOf(' mousetrap ') > -1) {
-        return false;
-      }
-
-      return (element.contentEditable && element.contentEditable == 'true');
-    };
-    
-    
-    /** exposes _handleKey publicly so it can be overwritten by extensions */
-    this.Mousetrap.prototype.handleKey = function() {
-        var self = this;
-        return self._handleKey.apply(self, arguments);
-    };
-    
-    /** allow custom key mappings */
-    this.Mousetrap.addKeycodes = function(object) {
-        for (var key in object) {
-            if (object.hasOwnProperty(key)) _MAP[key] = object[key];
-        }
-        _REVERSE_MAP = null;
-    };
-    
-    return this;
 }
