@@ -1,2 +1,1 @@
-require('./mousetrap');
-module.exports = 'angularMousetrap';
+export { default as Mousetrap } from './mousetrap.js'

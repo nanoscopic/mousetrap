@@ -2,9 +2,7 @@
 // Copyright (c) 2020 David Helkowski
 // License Apache 2.0 - http://www.apache.org/licenses/LICENSE-2.0
   
-angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
-    "ngInject";
-    
+export default function Mousetrap() {
     /** mapping of special keycodes to their corresponding keys
      * everything in this dictionary cannot use keypress events
      * so it has to be here to map to the correct keycodes for
@@ -573,9 +571,9 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
         _addEvent(targetElement, 'keyup', _handleKeyEvent);
     }
     
-    this.$get = function( targetElement ) {
+    this.createInstance = function( targetElement ) {
         var self = this;
-        return self.Mousetrap( targetElement );
+        return new self.Mousetrap( targetElement );
     }
     
     /** binds an event to mousetrap
@@ -702,4 +700,4 @@ angular.module("angularMousetrap",[]).provider("angularMousetrap", function() {
         }
         _REVERSE_MAP = null;
     };
-});
+}
