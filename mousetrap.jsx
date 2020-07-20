@@ -227,7 +227,7 @@ export default class Mousetrap {
     
     /** @param {string} key
      * @returns {boolean} */
-    function _isModifier(key) {
+    _isModifier(key) {
         return key == 'shift' || key == 'ctrl' || key == 'alt' || key == 'meta';
     }
     
