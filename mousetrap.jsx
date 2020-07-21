@@ -67,9 +67,9 @@ export default class Mousetrap {
         this.target = targetElement;
         
         // start
-        this._addEvent( targetElement, 'keypress', this.#handleKeyEvent.bind(this) );
-        this._addEvent( targetElement, 'keydown', this.#handleKeyEvent.bind(this) );
-        this._addEvent( targetElement, 'keyup', this.#handleKeyEvent.bind(this) );
+        this.#addEvent( targetElement, 'keypress', this.#handleKeyEvent.bind(this) );
+        this.#addEvent( targetElement, 'keydown', this.#handleKeyEvent.bind(this) );
+        this.#addEvent( targetElement, 'keyup', this.#handleKeyEvent.bind(this) );
     }
     
     mouseTrapEnabled = true;
@@ -584,7 +584,7 @@ export default class Mousetrap {
      * @param {string=} action passed in */
     static #pickBestAction(key, modifiers, action) {
         // if no action was picked in we should try to pick the one that we think would work best for this key
-        if (!action) action = this._getReverseMap()[key] ? 'keydown' : 'keypress';
+        if (!action) action = this.#getReverseMap()[key] ? 'keydown' : 'keypress';
         
         // modifier keys don't work as expected with keypress, switch to keydown
         if (action == 'keypress' && modifiers.length) action = 'keydown';
