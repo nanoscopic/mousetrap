@@ -6,7 +6,7 @@ export default class Mousetrap {
      * everything in this dictionary cannot use keypress events
      * so it has to be here to map to the correct keycodes for
      * keyup/keydown events */
-    _MAP = {
+    static _MAP = {
         8:'backspace', 9:'tab', 13:'enter', 16:'shift', 17:'ctrl', 18:'alt', 20:'capslock',
         27:'esc', 32:'space', 33:'pageup', 34:'pagedown', 35:'end', 36:'home', 37:'left',
         38:'up', 39:'right', 40:'down', 45:'ins', 46:'del', 91:'meta', 93:'meta', 224:'meta'
@@ -15,7 +15,7 @@ export default class Mousetrap {
     /** mapping for special characters so they can support
      * this dictionary is only used incase you want to bind a
      * keyup or keydown event to one of these keys */
-    _KEYCODE_MAP = {
+    static _KEYCODE_MAP = {
         106:'*', 107:'+', 109:'-', 110:'.', 111:'/', 186:';', 187:'=', 188:',', 189:'-',
         190:'.', 191:'/', 192:'`', 219:'[', 220:'\\', 221:']', 222:'\''
     };
@@ -23,14 +23,14 @@ export default class Mousetrap {
     /** this is a mapping of keys that require shift on a US keypad back to the non shift equivelents
      * this is so you can use keyup events with these keys
      * this will only work reliably on US keyboards */
-    _SHIFT_MAP = {
+    static _SHIFT_MAP = {
         '~':'`', '!':'1', '@':'2', '#':'3', '$':'4', '%':'5', '^':'6', '&':'7', '*':'8',
         '(':'9', ')':'0', '_':'-', '+':'=', ':':';', '\"':'\'', '<':',', '>':'.', '?':'/', '|':'\\'
     };
     
     /** this is a list of special strings you can use to map
      * to modifier keys when you specify your keyboard shortcuts */
-    _SPECIAL_ALIASES = {
+    static _SPECIAL_ALIASES = {
         'option': 'alt',
         'command': 'meta',
         'return': 'enter',
@@ -42,9 +42,9 @@ export default class Mousetrap {
     /** variable to store the flipped version of _MAP from above
      * needed to check if we should use keypress or not when no action
      * is specified */
-    _REVERSE_MAP = {};
+    static _REVERSE_MAP = {};
     
-    constructor( targetElement ) {
+    static staticConstructor() {
         /// loop through the f keys, f1 to f19 and add them to the map programatically
         for (var i = 1; i < 20; ++i) {
             this._MAP[111 + i] = 'f' + i;
@@ -57,7 +57,9 @@ export default class Mousetrap {
             // @see https://github.com/ccampbell/mousetrap/pull/258
             this._MAP[i + 96] = i.toString();
         }
-        
+    }
+    
+    constructor( targetElement ) {
         this.targetElement = this.targetElement || document;
     
         /** element to attach key events to
@@ -140,12 +142,11 @@ export default class Mousetrap {
     };
     
     /** allow custom key mappings */
-    addKeycodes(object) {
-        var self = this;
+    static addKeycodes(object) {
         for (var key in object) {
-            if (object.hasOwnProperty(key)) self._MAP[key] = object[key];
+            if (object.hasOwnProperty(key)) this._MAP[key] = object[key];
         }
-        self._REVERSE_MAP = null;
+        this._REVERSE_MAP = null;
     };
     
     /** a list of all the callbacks setup via Mousetrap.bind() */
@@ -188,7 +189,7 @@ export default class Mousetrap {
             this._sequenceLevels[key] = 0;
         }
         
-        if (!activeSequences) _nextExpectedAction = false;
+        if (!activeSequences) this._nextExpectedAction = false;
     }
     
     /** finds all callbacks that match based on the keycode, modifiers, and action
@@ -333,7 +334,7 @@ export default class Mousetrap {
         // we ignore keypresses in a sequence that directly follow a keydown
         // for the same character
         var ignoreThisKeypress = e.type == 'keypress' && this._ignoreNextKeypress;
-        if (e.type == _nextExpectedAction && !this.#isModifier(character) && !ignoreThisKeypress) {
+        if (e.type == this._nextExpectedAction && !this.#isModifier(character) && !ignoreThisKeypress) {
             this.#resetSequences(doNotReset);
         }
         
@@ -388,7 +389,7 @@ export default class Mousetrap {
          * @returns {Function} */
         function _increaseSequence(nextAction) {
             return function() {
-                _nextExpectedAction = nextAction;
+                self._nextExpectedAction = nextAction;
                 ++self._sequenceLevels[combo];
                 self._resetSequenceTimer();
             };
@@ -488,7 +489,7 @@ export default class Mousetrap {
      * @param {Element|HTMLDocument} object
      * @param {string} type
      * @param {Function} callback */
-    #addEvent(object, type, callback) {
+    static #addEvent(object, type, callback) {
         if (object.addEventListener) {
             object.addEventListener(type, callback, false);
             return;
@@ -500,7 +501,7 @@ export default class Mousetrap {
     /** takes the event and returns the key character
      * @param {Event} e
      * @return {string} */
-    #characterFromEvent(e) {
+    static #characterFromEvent(e) {
         // for keypress events we should return the character as is
         if (e.type == 'keypress') {
             var character = String.fromCharCode(e.which);
@@ -524,14 +525,14 @@ export default class Mousetrap {
         return String.fromCharCode(e.which).toLowerCase();
     }
     
-    #modifiersMatch(modifiers1, modifiers2) {
+    static #modifiersMatch(modifiers1, modifiers2) {
         return modifiers1.sort().join(',') === modifiers2.sort().join(',');
     }
     
     /** takes a key event and figures out what the modifiers are
      * @param {Event} e
      * @returns {Array} */
-    #eventModifiers(e) {
+    static #eventModifiers(e) {
         var modifiers = [];
         if( e.shiftKey ) modifiers.push('shift');
         if( e.altKey   ) modifiers.push('alt');
@@ -540,7 +541,7 @@ export default class Mousetrap {
         return modifiers;
     }
     
-    #preventDefault(e) {
+    static #preventDefault(e) {
         if (e.preventDefault) {
             e.preventDefault();
             return;
@@ -548,7 +549,7 @@ export default class Mousetrap {
         e.returnValue = false;
     }
     
-    #stopPropagation(e) {
+    static #stopPropagation(e) {
         if (e.stopPropagation) {
             e.stopPropagation();
             return;
@@ -558,13 +559,13 @@ export default class Mousetrap {
     
     /** @param {string} key
      * @returns {boolean} */
-    #isModifier(key) {
+    static #isModifier(key) {
         return key == 'shift' || key == 'ctrl' || key == 'alt' || key == 'meta';
     }
     
     /** reverses the map lookup so that we can look for specific keys to see what can and can't use keypress
      * @return {Object} */
-    #getReverseMap() {
+    static #getReverseMap() {
         if (!this._REVERSE_MAP) {
             this._REVERSE_MAP = {};
             for (var key in this._MAP) {
@@ -581,7 +582,7 @@ export default class Mousetrap {
      * @param {string} key - character for key
      * @param {Array} modifiers
      * @param {string=} action passed in */
-    #pickBestAction(key, modifiers, action) {
+    static #pickBestAction(key, modifiers, action) {
         // if no action was picked in we should try to pick the one that we think would work best for this key
         if (!action) action = this._getReverseMap()[key] ? 'keydown' : 'keypress';
         
@@ -594,7 +595,7 @@ export default class Mousetrap {
     /** Converts from a string key combination to an array
      * @param  {string} combination like "command+shift+l"
      * @return {Array} */
-    #keysFromString(combination) {
+    static #keysFromString(combination) {
         if (combination === '+') return ['+'];
         
         combination = combination.replace(/\+{2}/g, '+plus');
@@ -605,7 +606,7 @@ export default class Mousetrap {
      * @param  {string} combination key combination ("command+s" or "a" or "*")
      * @param  {string=} action
      * @returns {Object} */
-    #getKeyInfo(combination, action) {
+    static #getKeyInfo(combination, action) {
         var keys, key, i, modifiers = [];
         
         // Take the keys from this pattern and figure out what the actual pattern is all about
@@ -638,10 +639,12 @@ export default class Mousetrap {
         };
     }
     
-    #belongsTo(element, ancestor) {
+    static #belongsTo(element, ancestor) {
         if (element === null || element === document) return false;
         if (element === ancestor) return true;
        
         return this.#belongsTo(element.parentNode, ancestor);
     }
 }
+
+Mousetrap.staticConstructor();
