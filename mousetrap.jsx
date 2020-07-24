@@ -60,16 +60,16 @@ export default class Mousetrap {
     }
     
     constructor( targetElement ) {
-        this.targetElement = this.targetElement || document;
+        this.targetElement = targetElement || document;
     
         /** element to attach key events to
          * @type {Element} */
         this.target = targetElement;
         
         // start
-        this.#addEvent( targetElement, 'keypress', this.#handleKeyEvent.bind(this) );
-        this.#addEvent( targetElement, 'keydown', this.#handleKeyEvent.bind(this) );
-        this.#addEvent( targetElement, 'keyup', this.#handleKeyEvent.bind(this) );
+        Mousetrap.#addEvent( this.targetElement, 'keypress', this.#handleKeyEvent.bind(this) );
+        Mousetrap.#addEvent( this.targetElement, 'keydown', this.#handleKeyEvent.bind(this) );
+        Mousetrap.#addEvent( this.targetElement, 'keyup', this.#handleKeyEvent.bind(this) );
     }
     
     mouseTrapEnabled = true;
@@ -101,7 +101,7 @@ export default class Mousetrap {
      * @param {string=} action - 'keypress', 'keydown', or 'keyup' */
     bind(keys, callback, action) {
         keys = keys instanceof Array ? keys : [keys];
-        this.#bindMultiple.call(this, keys, callback, action);
+        this._bindMultiple.call(this, keys, callback, action);
         return this;
     };
     
@@ -231,7 +231,7 @@ export default class Mousetrap {
             // chrome will not fire a keypress if meta or control is down
             // safari will fire a keypress if meta or meta+shift is down
             // firefox will fire a keypress if meta or control is down
-            if ((action == 'keypress' && !e.metaKey && !e.ctrlKey) || this.#modifiersMatch(modifiers, callback.modifiers)) {
+            if ((action == 'keypress' && !e.metaKey && !e.ctrlKey) || Mousetrap.#modifiersMatch(modifiers, callback.modifiers)) {
                 // when you bind a combination or sequence a second time it
                 // should overwrite the first one.  if a sequenceName or
                 // combination is specified in this call it does just that
@@ -348,7 +348,7 @@ export default class Mousetrap {
         // @see http://stackoverflow.com/questions/4285627/javascript-keycode-vs-charcode-utter-confusion
         if (typeof e.which !== 'number') e.which = e.keyCode;
         
-        var character = this.#characterFromEvent(e);
+        var character = Mousetrap.#characterFromEvent(e);
         
         // no character found then stop
         if (!character) return;
@@ -405,7 +405,7 @@ export default class Mousetrap {
             // we should ignore the next key up if the action is key down
             // or keypress.  this is so if you finish a sequence and
             // release the key the final key will not trigger a keyup
-            if (action !== 'keyup') self._ignoreNextKeyup = self._characterFromEvent(e);
+            if (action !== 'keyup') self._ignoreNextKeyup = Mousetrap.#characterFromEvent(e);
             
             // weird race condition if a sequence ends with the key
             // another sequence begins with
@@ -423,8 +423,8 @@ export default class Mousetrap {
         // ones are better suited to the key provided
         for (var i = 0; i < keys.length; ++i) {
             var isFinal = i + 1 === keys.length;
-            var wrappedCallback = isFinal ? _callbackAndReset : _increaseSequence(action || this.#getKeyInfo(keys[i + 1]).action);
-            this.#bindSingle(keys[i], wrappedCallback, action, combo, i);
+            var wrappedCallback = isFinal ? _callbackAndReset : _increaseSequence(action || Mousetrap.#getKeyInfo(keys[i + 1]).action);
+            this._bindSingle(keys[i], wrappedCallback, action, combo, i);
         }
     }
     
@@ -434,7 +434,7 @@ export default class Mousetrap {
      * @param {string=} action
      * @param {string=} sequenceName - name of sequence if part of sequence
      * @param {number=} level - what part of the sequence the command is */
-    #bindSingle(combination, callback, action, sequenceName, level) {
+    _bindSingle(combination, callback, action, sequenceName, level) {
         // store a direct mapped reference for use with Mousetrap.trigger
         this._directMap[combination + ':' + action] = callback;
         
@@ -450,7 +450,7 @@ export default class Mousetrap {
             return;
         }
         
-        var info = this.#getKeyInfo(combination, action);
+        var info = Mousetrap.#getKeyInfo(combination, action);
 
         // make sure to initialize array if this is the first time
         // a callback is added for this key
@@ -479,9 +479,9 @@ export default class Mousetrap {
      * @param {Array} combinations
      * @param {Function} callback
      * @param {string|undefined} action */
-    #bindMultiple(combinations, callback, action) {
+    _bindMultiple(combinations, callback, action) {
         for (var i = 0; i < combinations.length; ++i) {
-            this.#bindSingle(combinations[i], callback, action);
+            this._bindSingle(combinations[i], callback, action);
         }
     };
     
