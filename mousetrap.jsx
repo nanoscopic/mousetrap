@@ -210,7 +210,7 @@ export default class Mousetrap {
         if (!this._callbacks[character]) return [];
         
         // if a modifier key is coming up on its own we should allow it
-        if (action == 'keyup' && parent._isModifier(character)) modifiers = [character];
+        if (action == 'keyup' && Mousetrap.#isModifier(character)) modifiers = [character];
         
         // loop through all callbacks for the key that was pressed and see if any of them match
         for (i = 0; i < this._callbacks[character].length; ++i) {
@@ -334,7 +334,7 @@ export default class Mousetrap {
         // we ignore keypresses in a sequence that directly follow a keydown
         // for the same character
         var ignoreThisKeypress = e.type == 'keypress' && this._ignoreNextKeypress;
-        if (e.type == this._nextExpectedAction && !this.#isModifier(character) && !ignoreThisKeypress) {
+        if (e.type == this._nextExpectedAction && !Mousetrap.#isModifier(character) && !ignoreThisKeypress) {
             this.#resetSequences(doNotReset);
         }
         
@@ -359,7 +359,7 @@ export default class Mousetrap {
             return;
         }
         
-        this.handleKey(character, this.#eventModifiers(e), e);
+        this.handleKey(character, Mousetrap.#eventModifiers(e), e);
     }
     
     /** called to set a 1 second timeout on the specified sequence
@@ -626,7 +626,7 @@ export default class Mousetrap {
             }
             
             // if this key is a modifier then add it to the list of modifiers
-            if (this.#isModifier(key)) modifiers.push(key);
+            if (Mousetrap.#isModifier(key)) modifiers.push(key);
         }
         
         // depending on what the key combination is we will try to pick the best event for it
